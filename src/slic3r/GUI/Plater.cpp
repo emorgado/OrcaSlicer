@@ -19424,6 +19424,9 @@ void Plater::record_slice_preset(std::string action)
         auto filament_presets = wxGetApp().preset_bundle->filament_presets;
         for (int i = 0; i < filament_presets.size(); ++i) {
             auto filament_preset = wxGetApp().preset_bundle->filaments.find_preset(filament_presets[i]);
+            // A name left behind by an AMS sync may not resolve to a loaded preset.
+            if (filament_preset == nullptr)
+                continue;
             if (filament_preset->is_system) {
                 j["filament_preset_" + std::to_string(i)] = filament_preset->name;
             }
