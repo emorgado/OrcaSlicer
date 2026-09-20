@@ -1,5 +1,6 @@
 #include "libslic3r/libslic3r.h"
 #include "DeviceManager.hpp"
+#include "libslic3r/LocalesUtils.hpp"
 #include "HMS.hpp"
 #include "I18N.hpp"
 #include "libslic3r/Time.hpp"
@@ -1980,14 +1981,16 @@ int MachineObject::command_axis_control(std::string axis, double unit, double in
         }
     }
 
-    char cmd[256];
+    // G-code needs a '.' decimal point; sprintf("%0.1f") follows the UI locale (e.g. "10,0" in pt_BR).
+    const std::string distance = float_to_string_decimal_point(value * unit, 1);
+    std::string       cmd;
     if (axis.compare("X") == 0
         || axis.compare("Y") == 0
         || axis.compare("Z") == 0) {
-        sprintf(cmd, "M211 S \nM211 X1 Y1 Z1\nM1002 push_ref_mode\nG91 \nG1 %s%0.1f F%d\nM1002 pop_ref_mode\nM211 R\n", axis.c_str(), value * unit, speed);
+        cmd = "M211 S \nM211 X1 Y1 Z1\nM1002 push_ref_mode\nG91 \nG1 " + axis + distance + " F" + std::to_string(speed) + "\nM1002 pop_ref_mode\nM211 R\n";
     }
     else if (axis.compare("E") == 0) {
-        sprintf(cmd, "M83 \nG0 %s%0.1f F%d\n", axis.c_str(), value * unit, speed);
+        cmd = "M83 \nG0 " + axis + distance + " F" + std::to_string(speed) + "\n";
     }
     else {
         return -1;
